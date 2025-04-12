@@ -1,0 +1,28 @@
+{
+  "name": "node",
+  "version": "1.0.0",
+  "description": "API Creation for MERN",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon --exec \"node app.js\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jayanthansenthilkumar/Node.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jayanthansenthilkumar/Node/issues"
+  },
+  "homepage": "https://github.com/jayanthansenthilkumar/Node#readme",
+  "dependencies": {
+    "axios": "^1.8.4",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.9"
+  }
+}
