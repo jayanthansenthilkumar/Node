@@ -7,16 +7,21 @@ app.get('/',(req, res) => {
     res.send("Hello!, This is Jayanthan Senthilkumar");
 });
 
-async function fetchProducts() {
-    const API_URL = 'https://fakestoreapi.com';
+// Simplified API fetching function with optional ID parameter
+async function fetchProducts(id = null) {
+    const API_URL = 'https://fakestoreapi.com/products';
+    const URL = id ? `${API_URL}/${id}` : API_URL;
     try {
-        const response = await axios.get(`${API_URL}/products`);
+        const response = await axios.get(URL);
         return response.data;
     } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error(`Error fetching products${id ? ' with ID ' + id : ''}:`, error);
         throw error;
     }
 }
+
+// Cache for product data
+const cache = {};
 
 app.get('/products', async (req, res) => {
     try {
@@ -29,46 +34,16 @@ app.get('/products', async (req, res) => {
 
 app.get('/products/:id', async (req, res) => {
     try {
-        console.log(req.params.id);
-        const products = await fetchProducts();
-        res.json(products);
+        const id = req.params.id;
+        if (id in cache) {
+            return res.json(cache[id]);
+        }
+        const product = await fetchProducts(id);
+        cache[id] = product;
+        res.json(product);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch products' });
+        res.status(500).json({ error: 'Failed to fetch product' });
     }
-});
-
-const cacheV1 = {};
-async function getProductsWithId(id) {
-    if(id in cacheV1) {
-        return cacheV1[id];
-    }
-    const API_DOMAIN = 'https://fakestoreapi.com/';
-    const response = axios.get(API_DOMAIN + 'products/' + id);
-    const data = (await response).data;
-    cacheV1[id] = data;
-    return data;
-}
-
-const cacheV2 = {};
-async function getProductsWithIdV2(id) {
-    if(id in cacheV2) {
-        return cacheV2[id].then(r => r.data);
-    }
-    const API_DOMAIN = 'https://fakestoreapi.com/';
-    const response = axios.get(API_DOMAIN + 'products/' + id);
-    cacheV2[id] = response;
-    const data = (await response).data;
-    return data;
-}
-
-app.get('/v1/products/:id', async(req, res) => {
-    const products = await getProductsWithId(req.params.id);
-    res.send(products);
-});
-
-app.get('/v2/products/:id', async(req, res) => {
-    const products = await getProductsWithIdV2(req.params.id);
-    res.send(products);
 });
 
 // Use the router from products.js
