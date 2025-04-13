@@ -1,8 +1,10 @@
 const express = require('express');
-<<<<<<<<< Temporary merge branch 1
-const app = express();
 const axios = require('axios');
 const PORT = 3012;
+const app = express();
+
+// Simple in-memory cache
+const cache = {};
 
 app.get('/',(req, res) => {
     res.send("Hello!, This is Jayanthan Senthilkumar");
@@ -11,7 +13,13 @@ app.get('/',(req, res) => {
 async function fetchProducts() {
     const API_URL = 'https://fakestoreapi.com';
     try {
+        if (cache.allProducts) {
+            console.log('Using cached products');
+            return cache.allProducts;
+        }
+        
         const response = await axios.get(`${API_URL}/products`);
+        cache.allProducts = response.data;
         return response.data;
     } catch (error) {
         console.error('Error fetching products:', error);
@@ -30,46 +38,19 @@ app.get('/products', async (req, res) => {
 
 app.get('/products/:id', async (req, res) => {
     try {
-        console.log(req.params.id);
-        const products = await fetchProducts();
-        res.json(products);
+        const id = req.params.id;
+        if (cache[`product_${id}`]) {
+            return res.json(cache[`product_${id}`]);
+        }
+        
+        const API_URL = 'https://fakestoreapi.com';
+        const response = await axios.get(`${API_URL}/products/${id}`);
+        const product = response.data;
+        cache[`product_${id}`] = product;
+        res.json(product);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch products' });
+        res.status(500).json({ error: 'Failed to fetch product' });
     }
-});
-
-const cacheV1 = {};
-async function getProductsWithId(id) {
-    if(id in cacheV1) {
-        return cacheV1[id];
-    }
-    const API_DOMAIN = 'https://fakestoreapi.com/';
-    const response = axios.get(API_DOMAIN + 'products/' + id);
-    const data = (await response).data;
-    cacheV1[id] = data;
-    return data;
-}
-
-const cacheV2 = {};
-async function getProductsWithIdV2(id) {
-    if(id in cacheV2) {
-        return cacheV2[id].then(r => r.data);
-    }
-    const API_DOMAIN = 'https://fakestoreapi.com/';
-    const response = axios.get(API_DOMAIN + 'products/' + id);
-    cacheV2[id] = response;
-    const data = (await response).data;
-    return data;
-}
-
-app.get('/v1/products/:id', async(req, res) => {
-    const products = await getProductsWithId(req.params.id);
-    res.send(products);
-});
-
-app.get('/v2/products/:id', async(req, res) => {
-    const products = await getProductsWithIdV2(req.params.id);
-    res.send(products);
 });
 
 // Use the router from products.js
@@ -78,25 +59,3 @@ app.use('/products', require('./products'));
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
-=========
-const axios = require('axios');
-const app = express();
-const PORT = 3012;
-const API_URL = 'https://fakestoreapi.com/products';
-
-// Simple in-memory cache
-const cache = {};
-
-app.get('/', (req, res) => res.send("Hello!, This is Jayanthan Senthilkumar"));
-
-app.get('/products', async (req, res) => {
-  try {
-    cache.all = cache.all || (await axios.get(API_URL)).data;
-    res.json(cache.all);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch products' });
-  }
-});
-
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
->>>>>>>>> Temporary merge branch 2
