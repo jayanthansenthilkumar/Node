@@ -15,6 +15,7 @@ app.get('/products', async(req, res) => {
     const products = await getProducts();
     res.send(products);
 })
+    app.use('/products', require('./products'));
 const cacheV2 = {};
 async function getProductsWithIdV2 (id) {
     if(id in cacheV2) {
