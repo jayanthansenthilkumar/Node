@@ -3,14 +3,43 @@ const app = express();
 const axios = require('axios');
 const PORT = 3012;
 
+// Simple memory cache with expiry
+const productCache = {
+  data: {},
+  set: function(key, value) {
+    this.data[key] = {
+      value,
+      timestamp: Date.now()
+    };
+  },
+  get: function(key) {
+    const item = this.data[key];
+    if (item && Date.now() - item.timestamp < 60000) { // 1 minute cache
+      return item.value;
+    }
+    return null;
+  }
+};
+
 app.get('/',(req, res) => {
     res.send("Hello!, This is Jayanthan Senthilkumar");
 });
 
-async function fetchProducts() {
+async function fetchProducts(category = '') {
+    const cacheKey = `products${category ? '-' + category : ''}`;
+    const cached = productCache.get(cacheKey);
+    
+    if (cached) {
+        console.log('Serving from cache');
+        return cached;
+    }
+    
     const API_URL = 'https://fakestoreapi.com';
+    const url = `${API_URL}/products${category ? '/category/' + category : ''}`;
+    
     try {
-        const response = await axios.get(`${API_URL}/products`);
+        const response = await axios.get(url, { timeout: 3000 });
+        productCache.set(cacheKey, response.data);
         return response.data;
     } catch (error) {
         console.error('Error fetching products:', error);
@@ -20,7 +49,8 @@ async function fetchProducts() {
 
 app.get('/products', async (req, res) => {
     try {
-        const products = await fetchProducts();
+        const category = req.query.category || '';
+        const products = await fetchProducts(category);
         res.json(products);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch products' });
