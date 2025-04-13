@@ -4,7 +4,7 @@
   "description": "API Creation for MERN",
   "main": "app.js",
   "scripts": {
-    "start": "node cache.js",
+    "start": "node index.js",
     "dev": "nodemon --exec \"node app.js\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
